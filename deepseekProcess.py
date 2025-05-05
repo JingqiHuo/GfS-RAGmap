@@ -1,17 +1,18 @@
 import json
 from openai import OpenAI
-
+from secrets_retrieval import get_APIkey
 """
 This class is used to process the prompt.
 GPT will parse the user's prompt (Points or Routes) and return formatted JSON data
 """
+
 
 class deepseekProcess(object):
         
     def __init__(self,user_prompt):
         
         self.client = OpenAI(
-            api_key="sk-31563692c3f2497193f1c7a86386ea0f",
+            api_key=get_APIkey('E:\GfS-RAG-Map-Return\ApiKeys\DeepSeek.txt'),
             base_url="https://api.deepseek.com/v1",
         )
 

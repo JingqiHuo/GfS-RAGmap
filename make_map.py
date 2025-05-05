@@ -1,6 +1,6 @@
 from Google_call import ApiMaps    
 import folium
-
+from secrets_retrieval import get_APIkey
 """
 This class is used to add elements to the map
 according to the GeoJSON received from Google_call.py
@@ -8,9 +8,10 @@ according to the GeoJSON received from Google_call.py
 
 class make_map(object):
 
-    def __init__(self,api_key):
+    def __init__(self):
         # Construct Apimaps instance
-        self.maps = ApiMaps(api_key=api_key)
+       
+        self.maps = ApiMaps()
 
 
 

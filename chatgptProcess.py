@@ -1,6 +1,7 @@
 import openai
+from secrets_retrieval import get_APIkey
 
-openai.api_key = "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"
+openai.api_key = get_APIkey('E:\GfS-RAG-Map-Return\ApiKeys\OpenAI.txt')
 
 def extract_locations_from_text(text):
     prompt = f"""

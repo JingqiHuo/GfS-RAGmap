@@ -1,14 +1,14 @@
 import requests
 import polyline
-
+from secrets_retrieval import get_APIkey
 """
 This class is used to call Google map API and return
  formatted GeoJSON data in order to map a map
 """
 
 class ApiMaps:
-    def __init__(self,api_key):
-        self.api_key = api_key
+    def __init__(self):
+        self.api_key = get_APIkey('E:\GfS-RAG-Map-Return\ApiKeys\Google.txt')
         self.features = []  # dynamically collect Feature
 
     def draw_polyline(self, origin, destination):
