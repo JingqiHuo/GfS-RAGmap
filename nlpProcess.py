@@ -4,7 +4,7 @@ import spacy
 class nlpProcess:
     def __init__(self, text):
         self.text = text
-        self.nlp = spacy.load("en_core_web_trf")  # 推荐 en_core_web_trf 更强
+        self.nlp = spacy.load("en_core_web_trf")  
         self.doc = self.nlp(text)
 
     def extract_coordinates(self):

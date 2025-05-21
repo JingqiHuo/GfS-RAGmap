@@ -8,7 +8,7 @@ This class is used to call Google map API and return
 
 class ApiMaps:
     def __init__(self):
-        self.api_key = get_APIkey('E:\GfS-RAG-Map-Return\ApiKeys\Google.txt')
+        self.api_key = get_APIkey('/home/s2630332/gfs/ApiKeys/Google.txt')
         self.features = []  # dynamically collect Feature
 
     def draw_polyline(self, origin, destination):
@@ -49,7 +49,7 @@ class ApiMaps:
         self.features.append(feature)
         return feature
 
-    def draw_point(self, name, descr, coord_str):
+    def draw_point(self, name, coord_str):
         """
         Draw Points according to the coordinates in the format of string
         """
@@ -70,7 +70,7 @@ class ApiMaps:
             },
             "properties": {
                 "name": name,
-                "description": descr
+                
             }
         }
 
@@ -128,7 +128,7 @@ class ApiMaps:
 
         for task in task_list:
             if task["type"] == "point":
-                self.draw_point(task["name"], task["description"], task["coord"])
+                self.draw_point(task["name"], task["coord"])
             elif task["type"] == "polyline":
                 self.draw_polyline(task["origin"], task["destination"])
             elif task["type"] == "polygon":

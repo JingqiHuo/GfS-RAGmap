@@ -17,7 +17,8 @@ class make_map(object):
 
     def make_map(self,tasks):
 
-        
+        if not isinstance(tasks, list):
+            tasks = [tasks]
         # Allocate methods for tasks
         self.maps.process_tasks(tasks)
 
@@ -37,7 +38,7 @@ class make_map(object):
             if gtype == "Point":
                 folium.Marker(
                     location=[coords[1], coords[0]],
-                    popup=folium.Popup(f"<b>{props['name']}</b></br>{props['description']}", max_width=200),
+                    popup=folium.Popup(f"<b>{props['name']}</b>", max_width=200),
                     tooltip=props['name']
                 ).add_to(m)
 
