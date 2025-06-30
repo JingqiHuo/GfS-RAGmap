@@ -46,6 +46,17 @@ class deepseekProcess(object):
             messages=messages
         )
         return response.choices[0].message.content
+    
+    def rqtcall_default(self):
+
+        messages = [{"role": "user", "content": self.user_prompt}]
+        response = self.client.chat.completions.create(
+            model="deepseek-chat",
+            messages=messages
+        )
+        return response.choices[0].message.content
+    
+    
     def extract_features(self):
         """
         Extract the 'features' array from the model returns (if exsits), or directly return the array

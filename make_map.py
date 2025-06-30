@@ -1,6 +1,5 @@
-from Google_call import ApiMaps    
 import folium
-from secrets_retrieval import get_APIkey
+
 """
 This class is used to add elements to the map
 according to the GeoJSON received from Google_call.py
@@ -9,44 +8,21 @@ according to the GeoJSON received from Google_call.py
 class make_map(object):
 
     def __init__(self):
-        # Construct Apimaps instance
-       
-        self.maps = ApiMaps()
+
+        pass
 
 
 
     def make_map(self,tasks):
 
-        if not isinstance(tasks, list):
-            tasks = [tasks]
-        # Allocate methods for tasks
-        self.maps.process_tasks(tasks)
-
-        # Get the full FeatureCollection
-        geojson_all = self.maps.get_feature_collection()
-
-        # Show the map
-        # Decide the center location
-        first = geojson_all['features'][0]['geometry']['coordinates']
+        first = tasks['features'][0]['geometry']['coordinates']
         m = folium.Map(location=[first[1], first[0]], zoom_start=10)
 
-        for feature in geojson_all['features']:
-            coords = feature['geometry']['coordinates']
-            props = feature['properties']
-            gtype = feature['geometry']['type']
+        folium.GeoJson(
+            tasks,
+            name="geojson",
+            tooltip=folium.GeoJsonTooltip(fields=["Name"]),
+            popup=folium.GeoJsonPopup(fields=["Introduction"])
+        ).add_to(m)
 
-            if gtype == "Point":
-                folium.Marker(
-                    location=[coords[1], coords[0]],
-                    popup=folium.Popup(f"<b>{props['name']}</b>", max_width=200),
-                    tooltip=props['name']
-                ).add_to(m)
-
-            elif gtype == "LineString":
-                folium.PolyLine(
-                    locations=[[lat, lng] for lng, lat in coords],
-                    
-                    weight=4,
-                    popup=folium.Popup(f"Route: {props.get('distance', 'duration')}", max_width=200)
-                ).add_to(m)
-        return m
+        return m._repr_html_()

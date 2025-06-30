@@ -40,3 +40,8 @@ class agent1(object):
         task = deepseekProcess(self.system_prompt,text).rqtcall_nl()
         return task
     
+    def agent_default(self,text):
+
+        response = deepseekProcess(None,text).rqtcall_default()
+        return response
+    

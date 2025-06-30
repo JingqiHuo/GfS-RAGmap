@@ -21,8 +21,8 @@ class database_query:
     @classmethod
     def init_resources(cls):
         print("initializing model...")
-        cls.INDEX_PATH = "/home/s2630332/gfs/gazetteer.index"
-        cls.META_PATH = "/home/s2630332/gfs/gazetteer_metadata.json"
+        cls.INDEX_PATH = "/home/s2630332/gfs/GfS-RAGmap/gazetteer.index"
+        cls.META_PATH = "/home/s2630332/gfs/GfS-RAGmap/gazetteer_metadata.json"
 
         # 1. load embedding model
         if cls._model is None:
@@ -31,7 +31,7 @@ class database_query:
             print("Device:", cls.model.device)  # check computing device type (cpu/gpu)
             print("CUDA available:", torch.cuda.is_available())
             print("GPU device name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")
-            print('Successfullt loaded embedding model.')
+            print('Successfully loaded embedding model.')
 
         # 2. connect to oracle db
         if cls._conn is None or cls._cursor is None:
@@ -42,7 +42,7 @@ class database_query:
             print('Successfully connected to Oracle database.')
     
         # 3. read data from SQL tables
-            cls.cursor.execute("SELECT SEQNO, NAME FROM ops$scotgaz.towns ORDER BY SEQNO ASC")
+            cls.cursor.execute("SELECT SEQNO, NAME, INTRODUCTION, CONV_LAT, CONV_LONG FROM ops$scotgaz.towns ORDER BY SEQNO ASC")
             cls.rows = cls.cursor.fetchall()
             print('Successfully get metadata from gazetteer.')
         
@@ -51,9 +51,10 @@ class database_query:
             print("Constructing text embedding and metadata...")
             cls.text_embedding = []
             cls.metadata = []
-            for seqno, name in cls.rows:
-                cls.text_embedding.append(f"{name}")  # customize embedding contents
-                cls.metadata.append({"SEQNO": seqno, "NAME": name})
+            for seqno, name, intro, lat, long in cls.rows:
+                cls.text_embedding.append(f"{name}:{intro}.")  # customize embedding contents
+                #print(cls.rows)
+                cls.metadata.append({"SEQNO": seqno, "NAME": name, "INTRODUCTION":intro, "lat":lat, "long": long})
             print('Successfully constructed text embedding and metadata')
 
         # 4.5 Try to load existing index and metadata
@@ -106,30 +107,56 @@ class database_query:
                 json.dump(cls.metadata, f)
         
 
-    def rag_workflow(self,query):
+    def rag_workflow(self,k,query):
         print("RAG starts.")
         #print(f"The user is asking {self.query}")
-        self.query = query
-        query_embedding = self.model.encode([self.query], convert_to_numpy=True)
-
-        top_k=1
-        
-
-# D=distance(the smaller, the more similar)
-# I=index(referring to the vectors in .index file)
-        D, I = self.index.search(query_embedding, top_k)
+        text=''
         result = []
-        for idx in I[0]:
-            result = self.metadata[idx]
-            print(f"SEQNO:{result['SEQNO']},NAME:{result['NAME']}")
-            self.cursor.execute(f"SELECT INTRODUCTION FROM ops$scotgaz.towns WHERE SEQNO = {result['SEQNO']}")
-            intro = self.cursor.fetchall()[0]
-            self.cursor.execute(f"SELECT CONV_LAT, CONV_LONG FROM ops$scotgaz.towns WHERE SEQNO = {result['SEQNO']}")
-            coord = self.cursor.fetchall()[0]
-            text = f"{coord} {intro}"
-            geo_info = f"{result['NAME']}:{coord}"
+        geo_info = []
+        print("keywords match")
+        self.cursor.execute(f"SELECT INTRODUCTION FROM ops$scotgaz.towns WHERE NAME = '{k}' AND INTRODUCTION IS NOT NULL")
+        intro = self.cursor.fetchall()
+        
+        
+        #print(intro)
+        self.cursor.execute(f"SELECT CONV_LAT, CONV_LONG FROM ops$scotgaz.towns WHERE NAME = '{k}' AND INTRODUCTION IS NOT NULL")
+        coord = self.cursor.fetchall()
+        text = f"{coord} {intro}"
+        print(text)
+        if len(coord) > 1:
+
+            for coor in coord:     
+                geo_info_temp = f"{k}:{coor}"
+                geo_info.append(geo_info_temp)
+        
+    # Move to vector search
+        if k=='' or text=='':
+            print('keywords failed, vector search')
+            self.query = query
+            query_embedding = self.model.encode([self.query], convert_to_numpy=True)
+
+            top_k=3
+    # D=distance(the smaller, the more similar)
+    # I=index(referring to the vectors in .index file)
+            D, I = self.index.search(query_embedding, top_k)
+            matched = []
+            for idx in I[0]:
+                
+                result = self.metadata[idx]
+                print(f"SEQNO:{result['SEQNO']},NAME:{result['NAME']}")
+                self.cursor.execute(f"SELECT INTRODUCTION FROM ops$scotgaz.towns WHERE SEQNO = {result['SEQNO']}")
+                intro = self.cursor.fetchall()[0]
+                self.cursor.execute(f"SELECT CONV_LAT, CONV_LONG FROM ops$scotgaz.towns WHERE SEQNO = {result['SEQNO']}")
+                coord = self.cursor.fetchall()[0]
+                text = f"{coord} {intro}"
+                geo_info = f"{result['NAME']}:{coord}"
+                print(intro)
+                matched.append(text)
+            text = matched
         # 8. clean up resources
         print("Retrieval ends")
+        print(text)
+        
         #self.cursor.close()
         #self.conn.close()
         return text, geo_info
