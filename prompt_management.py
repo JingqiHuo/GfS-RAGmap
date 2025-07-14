@@ -29,16 +29,13 @@ Identify all place names (towns, cities, villages, etc.) mentioned in this quest
 """,
 
 "task_idf":
-"""You are a precise geographic data extraction assistant.
-Your task is to:
-1. Analyze whether the user wants a route (i.e. direction/path between points).
-2. Extract all location coordinates in decimal format and assign names according to the sentence.
-3. Return a structured JSON array of features (points, polylines, polygons) depending on the user's intent.
-4. Output MUST be a pure JSON array (no outer object like "locations")
-5. Exlude the inputs which are no relevant to the quustion
-EXAMPLES:
+"""You are a geographic data extractor.
 
-(If no route is implied or requested):
+Your task:
+- Extract all relevant geographic points mentioned in the input.
+- For each point, return its name, coordinates [longitude, latitude], and a short introduction.
+- The question and answer must be supported directly by the passage, not invented.
+Output format:
 {
   "type": "FeatureCollection",
   "features": [
@@ -46,72 +43,44 @@ EXAMPLES:
       "type": "Feature",
       "geometry": {
         "type": "Point",
-        "coordinates": [-3.1617, 56.5645]
+        "coordinates": [longitude, latitude]
       },
       "properties": {
-        "Name": "Place1",
-        "Introduction": "introduction of place1"
+        "Name": "PlaceName",
+        "Introduction": "Short description of the place"
       }
     },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-2.8189, 56.5142]
-      },
-      "properties": {
-        "Name": "Place2",
-        "Introduction": "introduction of place2"
-      }
-    }
+    ...
   ]
 }
 
+Rules:
+- Output only points (type = "Point"). No routes or lines.
+- Use only "Name" and "Introduction" in "properties".
+- Output must be pure GeoJSON. No extra text.
 
-(If a route is implied or requested):
-{
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-3.1617, 56.5645]
-      },
-      "properties": {
-        "Name": "Place1",
-        "Introduction": "introduction of place1"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-2.8189, 56.5142]
-      },
-      "properties": {
-        "Name": "Place2",
-        "Introduction": "introduction of place2"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [-3.1617, 56.5645],
-          [-2.8189, 56.5142]
-        ]
-      },
-      "properties": {
-        "from": "Place1",
-        "to": "Place2"
-      }
-    }
-  ]
-}
 
 Now identify the intention of user in the following question:
+""",
+"question_generation":"""    
+    You are a helpful assistant trained in geography on Gazetteer for Scotland.
+    Given the following texts about a place
+    your task is to generate ONLY ONE pair of diverse and fact-based question and its answerthat a curious traveler or student might ask and give an answer according to given texts.
+    The question and answer must be supported directly by the passage, not invented.
+    Please strictly follow the format below:
+    Q: XXX. A: XXX.
+    Now process this input:
+    
+""",
+"question_generation_vector":"""    
+    You are a helpful assistant trained in geography on Gazetteer for Scotland.
+    Given the following texts about a place
+    your task is to generate ONLY ONE pair of diverse and fact-based question and its answerthat a curious traveler or student might ask and give an answer according to given texts.
+    The question and answer must be supported directly by the passage, not invented and DO NOT include the name of the entries. Make it useable for vector search and unusable for SQL search.
+    Please strictly follow the format below:
+    Q: XXX. A: XXX.
+    Now process this input:
+    
 """
 }
 
