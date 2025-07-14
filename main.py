@@ -66,8 +66,7 @@ def processing(user_input):
 
         #print(combined_text)
 
-        # Tell the task type
-        # If task is nothing with routing or other special tasks, just call the points\
+        
         start_json = time.perf_counter()
         task_json = test_agent.agent_json("task_idf", combined_text)
         end_json = time.perf_counter()
