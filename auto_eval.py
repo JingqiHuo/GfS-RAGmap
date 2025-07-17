@@ -96,22 +96,59 @@ def ans_gen(path_to_qaset):
         qaset = json.load(f)
 
     for item in qaset:
-        text_ans = processing(item["query"])
+        text_ans,retrieved = processing(item["query"])
         print(text_ans)
         item["predicted_answer"] = text_ans
+        item["retrieved"] = retrieved
     
     with open("qa_with_pred.json", "w", encoding="utf-8") as f:
         json.dump(qaset, f, indent=2, ensure_ascii=False)
 
+
+
 ##############################################################
-#               PART III evaluation                          #
+#               PART III Post-integration                    #
+##############################################################
+def integrate():
+    # 1. Load QA set (reference) and prediction set
+    with open("rageval_qaset.json", "r", encoding="utf-8") as f:
+        qaset = json.load(f)
+
+    with open("qa_with_pred.json", "r", encoding="utf-8") as f:
+        qa_withpred = json.load(f)
+
+    # 2. format
+    eval_map = {item["query"]: item for item in qa_withpred}
+
+    # 3. integrate into a dictionary, which ragas need
+    combined = []
+    for item in qaset:
+        query = item["query"]
+        if query in eval_map:
+            entry = eval_map[query]
+            
+            combined.append({
+                "user_input": query,
+                "reference": " ".join(entry["ground_truths"]),
+                "retrieved_contexts": entry.get("retrieved"),  
+                "answer": entry.get("predicted_answer")
+            })
+
+    # 4. save as json file
+    with open("eval_ready.json", "w", encoding="utf-8") as f:
+        json.dump(combined, f, indent=2, ensure_ascii=False)
+
+    print(f"Integration complete, {len(combined)} entries written into eval_ready.json")
+
+##############################################################
+#               PART IV evaluation                          #
 ##############################################################
 def eval():
-    # 载入 JSON（注意字段名需匹配）
+    # load json
     data = json.load(open("eval_ready.json", encoding="utf-8"))
     ds = Dataset.from_list(data)
 
-    # 执行评估
+    # execute evaluation
     results = evaluate(
         ds,
         metrics=[faithfulness, answer_relevancy, context_recall, context_precision],
@@ -121,38 +158,6 @@ def eval():
     df = results.to_pandas()
     df.to_csv("eval_results.csv", index=False)
 
-##############################################################
-#               PART IV Post-integration                    #
-##############################################################
-def integrate():
-    # 1. 载入两个 JSON 文件
-    with open("rageval_qaset.json", "r", encoding="utf-8") as f:
-        qaset = json.load(f)
-
-    with open("qa_with_pred.json", "r", encoding="utf-8") as f:
-        qa_withpred = json.load(f)
-
-    # 2. 将 eval_data 处理为 dict，便于按 query 快速查找
-    eval_map = {item["query"]: item for item in qa_withpred}
-
-    # 3. 合并条目
-    combined = []
-    for item in qaset:
-        query = item["query"]
-        if query in eval_map:
-            entry = eval_map[query]
-            combined.append({
-                "user_input": query,
-                "reference": " ".join(entry["ground_truths"]),
-                "retrieved_contexts": entry["contexts"],  # 可能等于 qaset 中的 context
-                "answer": entry.get("predicted_answer")
-            })
-
-    # 4. 保存为用于评估的 JSON 文件
-    with open("eval_ready.json", "w", encoding="utf-8") as f:
-        json.dump(combined, f, indent=2, ensure_ascii=False)
-
-    print(f"合并完成，{len(combined)} 条条目写入 eval_ready.json")
 
 #data_prep(50)
 ans_gen("rageval_qaset.json")

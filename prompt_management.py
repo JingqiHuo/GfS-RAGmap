@@ -28,13 +28,17 @@ Now process this input:
 Identify all place names (towns, cities, villages, etc.) mentioned in this question and return a JSON format of place names:
 """,
 
-"task_idf":
+"task_ext":
 """You are a geographic data extractor.
 
 Your task:
 - Extract all relevant geographic points mentioned in the input.
 - For each point, return its name, coordinates [longitude, latitude], and a short introduction.
-- The question and answer must be supported directly by the passage, not invented.
+- The output must be supported directly by the passage, not invented.
+Rules:
+- Output only points (type = "Point"). No routes or lines.
+- Use only "Name" and "Introduction" in "properties".
+- Output must be pure JSON. No extra text.
 Output format:
 {
   "type": "FeatureCollection",
@@ -53,14 +57,7 @@ Output format:
     ...
   ]
 }
-
-Rules:
-- Output only points (type = "Point"). No routes or lines.
-- Use only "Name" and "Introduction" in "properties".
-- Output must be pure GeoJSON. No extra text.
-
-
-Now identify the intention of user in the following question:
+Now process the following input:
 """,
 "question_generation":"""    
     You are a helpful assistant trained in geography on Gazetteer for Scotland.

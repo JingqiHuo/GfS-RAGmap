@@ -1,39 +1,69 @@
-import openai
+from openai import OpenAI
 from secrets_retrieval import get_APIkey
+import json
+class chatgptProcess(object):
+        
+    def __init__(self,system_prompt,user_prompt):
+        
+        self.client = OpenAI(
+            api_key=get_APIkey('/home/s2630332/gfs/ApiKeys/OpenAI.txt')
+            
+        )
 
-openai.api_key = get_APIkey('/home/s2630332/gfs/ApiKeys/OpenAI.txt')
+        self.system_prompt = system_prompt
 
-def extract_locations_from_text(text):
-    prompt = f"""
-你是一位擅长地理信息提取的助手。请从下面文本中提取出每个地名及其对应的坐标（纬度，经度），格式如下：
+        self.user_prompt = user_prompt
+    
+    def rqtcall(self):
 
-[
-  {{ "name": "地名", "coord": "纬度,经度" }}
-]
+        messages = [{"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": self.user_prompt}]
 
-请仅输出 JSON 数组，不需要其他解释。
+        response = self.client.chat.completions.create(
+            model="gpt-4",
+            messages=messages
+        )
 
-文本如下：
----
-{text}
----
-    """
+        #print(response)
+        return json.loads(response.choices[0].message.content)
+    
+    def rqtcall_nl(self):
 
-    response = openai.ChatCompletion.create(
-        model="text-davinci-003",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.2
-    )
+        messages = [{"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": self.user_prompt}]
 
-    result = response['choices'][0]['message']['content']
-    return result  # 你可以进一步 json.loads(result) 处理为 Python 对象
+        response = self.client.chat.completions.create(
+            model="gpt-4",
+            messages=messages
+        )
+        return response.choices[0].message.content
+    
+    def rqtcall_default(self):
 
-# 测试用例
-sample_text = """
-A small hamlet located close to the western boundary of Angus, Newbigging lies a half-mile (1 km) northwest of Newtyle (Angus), 1¼ miles (2 km) east of Ardler and 1½ miles (2.5 km) south of Meigle in Perth and Kinross. Coordinates are 56.5645°N, 3.1617°W.
-"""
+        messages = [{"role": "user", "content": self.user_prompt}]
+        response = self.client.chat.completions.create(
+            model="gpt-4",
+            messages=messages
+        )
+        return response.choices[0].message.content
+    
+    
+    def extract_features(self):
+        """
+        Extract the 'features' array from the model returns (if exsits), or directly return the array
+        Make sure to return a pure list
+        """
 
-print(extract_locations_from_text(sample_text))
+        model_output=self.rqtcall()
 
-#models = openai.Model.list()
-#print(models)
+        if isinstance(model_output, str):
+            model_output = json.loads(model_output)
+
+        if isinstance(model_output, dict) and 'features' in model_output:
+            return model_output['features']
+
+        if isinstance(model_output, list):
+            return model_output
+
+        # Error handling
+        raise ValueError("Output format error!")

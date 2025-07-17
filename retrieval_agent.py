@@ -27,7 +27,7 @@ class database_query:
         # 1. load embedding model
         if cls._model is None:
             print("Loading embedding model...")
-            cls.model = SentenceTransformer('all-MiniLM-L6-v2')  # output demension 384
+            cls.model = SentenceTransformer('BAAI/bge-small-en')  # output demension 384
             print("Device:", cls.model.device)  # check computing device type (cpu/gpu)
             print("CUDA available:", torch.cuda.is_available())
             print("GPU device name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")
@@ -135,7 +135,7 @@ class database_query:
             self.query = query
             query_embedding = self.model.encode([self.query], convert_to_numpy=True)
 
-            top_k=3
+            top_k=5
     # D=distance(the smaller, the more similar)
     # I=index(referring to the vectors in .index file)
             D, I = self.index.search(query_embedding, top_k)
@@ -149,7 +149,6 @@ class database_query:
                 self.cursor.execute(f"SELECT CONV_LAT, CONV_LONG FROM ops$scotgaz.towns WHERE SEQNO = {result['SEQNO']}")
                 coord = self.cursor.fetchall()[0]
                 text = f"{coord} {intro}"
-                geo_info = f"{result['NAME']}:{coord}"
                 print(intro)
                 matched.append(text)
             text = matched
@@ -159,7 +158,7 @@ class database_query:
         
         #self.cursor.close()
         #self.conn.close()
-        return text, geo_info
+        return text
 
 
 # next steps:

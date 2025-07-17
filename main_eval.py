@@ -8,7 +8,7 @@ import time
 
 def processing(user_input):
     start_idf = time.perf_counter()
-    test_agent = agent2()
+    test_agent = agent1()
     task_html= None
     intention_json = test_agent.agent_json("1st_idf", user_input)
     print(intention_json)
@@ -17,6 +17,7 @@ def processing(user_input):
     #intention = json.loads(intention_json)
     query_type = intention_json["retrieval"]
     print(f"RAG? {query_type}")
+    retrieved = []
     if query_type == 'no':
         start_nl = time.perf_counter()
         task_nl = test_agent.agent_default(user_input)
@@ -28,40 +29,31 @@ def processing(user_input):
 
         extraction = intention_json["places"]
         vector = False
-        matched = []
+        matched = ''
         if extraction:
             for k in extraction:
                 #print(k)
 
                 # keyword match
                 intro = return_intro.rag_workflow(k,user_input)
+                if intro != '[] []':
+                    matched = f"{matched} \n {intro}"
                 #print(intro)
-                if intro =='[] []':
+                elif intro =='[] []':
                     vector = True
-                # combine the matched intros and coordinates
-                matched.append(intro)
                 
+        print(matched)
         # vector search
         if vector:
             k=''
             intro = return_intro.rag_workflow(k,user_input)
-            matched = intro
-
-
+            matched = f"{matched} \n {intro}"
+        
+        retrieved = [matched]
         # Append user's query to the rag prompt
-        matched.append(user_input)
-
-        # Strings processing, extract texts and append to list
-        texts = []
-        for item in matched:
-            match = re.search(r'"\s*(.*?)\s*"', item)
-            if match:
-                texts.append(match.group(1))
-            elif item.strip():  
-                texts.append(item.strip())
-
-        # 2. Integrate as NL
-        combined_text = " ".join(texts)
+        matched = f"{matched} \n {user_input}"
+        print(type(matched))
+        print(matched)
         #print(geo_entities)
 
         #print(combined_text)
@@ -73,7 +65,7 @@ def processing(user_input):
         end_json = time.perf_counter()
 
         start_integrate = time.perf_counter()
-        task_nl = test_agent.agent_nl("info_integration", combined_text)
+        task_nl = test_agent.agent_nl("info_integration", matched)
         end_integrate = time.perf_counter()
         #print(combined_text)
         #print(task_json)
@@ -86,4 +78,4 @@ def processing(user_input):
         print(f"JSON output: {end_json-start_json:.6f}s")
         print(f"Info integration: {end_integrate-start_integrate:.6f}s")
         print(f"Map making: {end_map-start_map:.6f}s")
-    return task_nl
+    return task_nl,retrieved

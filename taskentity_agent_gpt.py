@@ -22,7 +22,6 @@ class agent2(object):
         pass
 
     def agent_json(self,prompt,text):
-#print(system_prompt)
         self.system_prompt = get_prompt(prompt)
         names = chatgptProcess(self.system_prompt,text).rqtcall()
         return names
