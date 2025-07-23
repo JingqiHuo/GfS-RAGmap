@@ -4,7 +4,6 @@ import json
 import random
 import re
 import json
-import os
 from main_eval import processing
 from datasets import Dataset
 from ragas import evaluate
@@ -15,7 +14,6 @@ from ragas.metrics import (
     context_precision
 )
 from taskentity_agent import agent1
-import openai
 
 
 
@@ -29,7 +27,11 @@ def data_prep(row_num):
     conn = cx_Oracle.connect(user="s2630332", password=password, dsn="geosgen")
     cursor = conn.cursor()
     print('Successfully connected to Oracle database.')
-    cursor.execute("SELECT NAME, INTRODUCTION FROM ops$scotgaz.towns WHERE INTRODUCTION IS NOT NULL AND LENGTH(INTRODUCTION) > 20 AND LENGTH(INTRODUCTION) < 500")
+    cursor.execute("""
+                   SELECT NAME, INTRODUCTION FROM ops$scotgaz.towns 
+                   WHERE INTRODUCTION IS NOT NULL AND LENGTH(INTRODUCTION)
+                    > 20 AND LENGTH(INTRODUCTION) < 500
+                   """)
     rows = cursor.fetchall()
     print('Successfully get metadata from gazetteer.')
     sampled_entries = random.sample(rows,row_num)
@@ -73,7 +75,6 @@ def data_prep(row_num):
     json_str = json.dumps(entries, indent=2)
     print(json_str)
 
-
     standarized_data = []
     json_data = json.loads(json_str)
     for item in json_data:
@@ -103,8 +104,6 @@ def ans_gen(path_to_qaset):
     
     with open("qa_with_pred.json", "w", encoding="utf-8") as f:
         json.dump(qaset, f, indent=2, ensure_ascii=False)
-
-
 
 ##############################################################
 #               PART III Post-integration                    #

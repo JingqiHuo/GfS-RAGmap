@@ -27,7 +27,8 @@ class database_query:
         # 1. load embedding model
         if cls._model is None:
             print("Loading embedding model...")
-            cls.model = SentenceTransformer('BAAI/bge-small-en')  # output demension 384
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            cls.model = SentenceTransformer('BAAI/bge-small-en',device=device)  # output demension 384
             print("Device:", cls.model.device)  # check computing device type (cpu/gpu)
             print("CUDA available:", torch.cuda.is_available())
             print("GPU device name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")

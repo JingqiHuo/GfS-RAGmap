@@ -2,7 +2,7 @@ import folium
 
 """
 This class is used to add elements to the map
-according to the GeoJSON received from Google_call.py
+according to the GeoJSON received from main.py
 """
 
 class make_map(object):

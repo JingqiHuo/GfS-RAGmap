@@ -14,7 +14,6 @@ def processing(user_input):
     print(intention_json)
     end_idf = time.perf_counter()
 
-    #intention = json.loads(intention_json)
     query_type = intention_json["retrieval"]
     print(f"RAG? {query_type}")
     if query_type == 'no':
@@ -32,11 +31,9 @@ def processing(user_input):
         matched = ""
         if extraction:
             for k in extraction:
-                #print(k)
 
                 # keyword match
                 intro = return_intro.rag_workflow(k,user_input)
-                #print(intro)
                 if intro =='[] []':
                     vector = True
                 # combine the matched intros and coordinates
@@ -53,12 +50,6 @@ def processing(user_input):
         matched = f"{retrieved} \n {user_input}"
         print(type(matched))
         print(matched)
-
-        #print(geo_entities)
-
-        #print(combined_text)
-
-        
         start_json = time.perf_counter()
         task_json = test_agent.agent_json("task_ext", retrieved)
         end_json = time.perf_counter()
@@ -66,7 +57,7 @@ def processing(user_input):
         start_integrate = time.perf_counter()
         task_nl = test_agent.agent_nl("info_integration", matched)
         end_integrate = time.perf_counter()
-        #print(combined_text)
+        
         print(task_json)
         print(task_nl)
         start_map = time.perf_counter()
