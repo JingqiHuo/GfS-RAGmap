@@ -1,12 +1,14 @@
 from openai import OpenAI
 from secrets_retrieval import get_APIkey
 import json
+from config.config import *
+
 class chatgptProcess(object):
         
     def __init__(self,system_prompt,user_prompt):
         
         self.client = OpenAI(
-            api_key=get_APIkey('/Path/to/OpenAI.txt')
+            api_key=get_APIkey(OPENAI_PATH)
             
         )
 

@@ -1,0 +1,31 @@
+{
+    
+    "db_params":
+    {
+        "db_username":"s2630332",
+        "db_dsn":"geosgen",
+        "db_password_path":"/home/s2630332/gfs/ApiKeys/database.txt"
+    },
+    
+    "embedding_params":
+    {
+        "model": "BAAI/bge-small-en",
+        "top_k": 5,
+        "index_path":"gazetteer.index",
+        "meta_path":"gazetteer_metadata.json"
+    },
+    
+    "LLM_params":
+    {
+        "LLM":"agent1",
+        "openaiPath":"/home/s2630332/gfs/ApiKeys/OpenAI.txt",
+        "dsPath":"/home/s2630332/gfs/ApiKeys/DeepSeek.txt"
+    },
+    
+    "eval_params":
+    {
+        "resultPath":"eval/",
+        "sample_number":5
+    }
+
+}

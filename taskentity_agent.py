@@ -20,3 +20,7 @@ class agent1(object):
         response = deepseekProcess(None,text).rqtcall_default()
         return response
     
+    def qa_test(self, text):
+        self.system_prompt = get_prompt("question_generation")
+        qaset = deepseekProcess(self.system_prompt,text).rqtcall_nl()
+        return qaset

@@ -5,6 +5,7 @@ from secrets_retrieval import get_password
 import torch
 import os
 import json
+from config.config import *
 
 class database_query:
     _model = None
@@ -21,14 +22,14 @@ class database_query:
     @classmethod
     def init_resources(cls):
         print("initializing model...")
-        cls.INDEX_PATH = "/home/s2630332/gfs/GfS-RAGmap/gazetteer.index"
-        cls.META_PATH = "/home/s2630332/gfs/GfS-RAGmap/gazetteer_metadata.json"
+        cls.INDEXPATH = INDEX_PATH
+        cls.METAPATH = META_PATH
 
         # 1. load embedding model
         if cls._model is None:
             print("Loading embedding model...")
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
-            cls.model = SentenceTransformer('BAAI/bge-small-en',device=device)  # output demension 384
+            cls.model = SentenceTransformer(EMBEDDING,device=device)  # output demension 384
             print("Device:", cls.model.device)  # check computing device type (cpu/gpu)
             print("CUDA available:", torch.cuda.is_available())
             print("GPU device name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")
@@ -37,8 +38,8 @@ class database_query:
         # 2. connect to oracle db
         if cls._conn is None or cls._cursor is None:
             print("Connecting to Oracle database...")
-            cls.password = get_password('/home/s2630332/gfs/ApiKeys/database.txt')
-            cls.conn = cx_Oracle.connect(user="s2630332", password=cls.password, dsn="geosgen")
+            cls.password = get_password(DB_PASSWORD_PATH)
+            cls.conn = cx_Oracle.connect(user=DB_USER, password=cls.password, dsn=DB_DSN)
             cls.cursor = cls.conn.cursor()
             print('Successfully connected to Oracle database.')
     
@@ -62,14 +63,14 @@ class database_query:
         cls.index = None
         cls.rebuild = False
 
-        if os.path.exists(cls.INDEX_PATH) and os.path.exists(cls.META_PATH):
+        if os.path.exists(cls.INDEXPATH) and os.path.exists(cls.METAPATH):
             print("Trying to load existing index and metadata")
             try:
                 # Load Index
-                cls.index = faiss.read_index(cls.INDEX_PATH)
+                cls.index = faiss.read_index(cls.INDEXPATH)
 
                 # Load metadata
-                with open(cls.META_PATH, "r") as f:
+                with open(cls.METAPATH, "r") as f:
                     cls.meta_loaded = json.load(f)
 
                 # See if the number of entries matches
@@ -113,7 +114,6 @@ class database_query:
         #print(f"The user is asking {self.query}")
         text=''
         result = []
-        geo_info = []
         print("keywords match")
         self.cursor.execute(f"SELECT INTRODUCTION FROM ops$scotgaz.towns WHERE NAME = '{k}' AND INTRODUCTION IS NOT NULL")
         intro = self.cursor.fetchall()
@@ -124,11 +124,7 @@ class database_query:
         coord = self.cursor.fetchall()
         text = f"{coord} {intro}"
         print(text)
-        if len(coord) > 1:
 
-            for coor in coord:     
-                geo_info_temp = f"{k}:{coor}"
-                geo_info.append(geo_info_temp)
         
     # Move to vector search
         if k=='' or text=='':
@@ -136,7 +132,7 @@ class database_query:
             self.query = query
             query_embedding = self.model.encode([self.query], convert_to_numpy=True)
 
-            top_k=5
+            top_k=TOPK
     # D=distance(the smaller, the more similar)
     # I=index(referring to the vectors in .index file)
             D, I = self.index.search(query_embedding, top_k)
@@ -162,6 +158,3 @@ class database_query:
         return text
 
 
-# next steps:
-# 1) think about how to recognize entity's type (towns/geofeatures)
-# 2) think about how to deal with multiple results/single result

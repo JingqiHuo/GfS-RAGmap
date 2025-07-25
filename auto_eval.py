@@ -14,17 +14,19 @@ from ragas.metrics import (
     context_precision
 )
 from taskentity_agent import agent1
-
-
+from taskentity_agent_gpt import agent2
+from config.config import *
+import os
+os.environ["OPENAI_API_KEY"] = OPENAI_PATH
 
 ##############################################################
 #               PART I Data Preparation                      #
 ##############################################################
-def data_prep(row_num):
+def data_prep():
     # 1. Construct Answer set (randomly pick 50 entries)
     print("Connecting to Oracle database...")
-    password = get_password('/home/s2630332/gfs/ApiKeys/database.txt')
-    conn = cx_Oracle.connect(user="s2630332", password=password, dsn="geosgen")
+    password = get_password(DB_PASSWORD_PATH)
+    conn = cx_Oracle.connect(user=DB_USER, password=password, dsn=DB_DSN)
     cursor = conn.cursor()
     print('Successfully connected to Oracle database.')
     cursor.execute("""
@@ -34,7 +36,7 @@ def data_prep(row_num):
                    """)
     rows = cursor.fetchall()
     print('Successfully get metadata from gazetteer.')
-    sampled_entries = random.sample(rows,row_num)
+    sampled_entries = random.sample(rows,SAMPLE_NUM)
     #print(sampled_entries)
 
     # 2. call an LLM to generate questions and answers
@@ -153,12 +155,19 @@ def eval():
         metrics=[faithfulness, answer_relevancy, context_recall, context_precision],
         raise_exceptions=False
     )
-
+    if LLM == 'agent1':
+        llm_name = 'ds'
+    elif LLM == 'agent2':
+        llm_name = 'gpt'
+    if EMBEDDING == 'BAAI/bge-small-en':
+        ebd_name = 'bge'
+    elif EMBEDDING  == 'all-MiniLM-L6-v2':
+        ebd_name = 'all'
     df = results.to_pandas()
-    df.to_csv("eval_results.csv", index=False)
+    name = f"eval/eval_results_{llm_name}_{ebd_name}_k{str(SAMPLE_NUM)}.csv"
+    df.to_csv(name, index=False)
 
-
-#data_prep(50)
-ans_gen("rageval_qaset.json")
-integrate()
+#data_prep()
+#ans_gen("rageval_qaset.json")
+#integrate()
 eval()
