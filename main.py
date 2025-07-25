@@ -3,11 +3,14 @@ from retrieval_agent import database_query
 from taskentity_agent import agent1
 from taskentity_agent_gpt import agent2
 import time
-
+from config.config import *
 
 def processing(user_input):
     start_idf = time.perf_counter()
-    test_agent = agent2()
+    if LLM == 'agent1':
+        test_agent = agent2()
+    elif LLM == 'agent2':
+        test_agent = agent2()
     task_html= None
     intention_json = test_agent.agent_json("1st_idf", user_input)
     print(intention_json)

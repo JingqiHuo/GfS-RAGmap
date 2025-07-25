@@ -2,13 +2,16 @@ from retrieval_agent import database_query
 from taskentity_agent import agent1
 from taskentity_agent_gpt import agent2
 import time
-
+from config.config import *
 
 def processing(user_input):
     start_idf = time.perf_counter()
 
     # choose agent1 for deepseek/ agent2 for chatgpt
-    test_agent = agent1()
+    if LLM == 'agent1':
+        test_agent = agent2()
+    elif LLM == 'agent2':
+        test_agent = agent2()
     intention_json = test_agent.agent_json("1st_idf", user_input)
     print(intention_json)
     end_idf = time.perf_counter()
