@@ -33,8 +33,8 @@ Identify all place names (towns, cities, villages, etc.) mentioned in this quest
 
 Your task:
 - Extract all relevant geographic points mentioned in the input.
-- For each point, return its name, coordinates [longitude, latitude], and a short introduction.
-- The output must be supported directly by the passage, not invented.
+- For each point, return its name, coordinates [latitude,longitude], and a short introduction. Do not invert the given coordinates
+- The output must be supported directly by the passage, not invented. If coordinates are not provided, do not invent.
 Rules:
 - Output only points (type = "Point"). No routes or lines.
 - Use only "Name" and "Introduction" in "properties".
@@ -47,7 +47,7 @@ Output format:
       "type": "Feature",
       "geometry": {
         "type": "Point",
-        "coordinates": [longitude, latitude]
+        "coordinates": [latitude,longitude]
       },
       "properties": {
         "Name": "PlaceName",
@@ -78,7 +78,9 @@ Now process the following input:
     Q: XXX. A: XXX.
     Now process this input:
     
-"""
+""",
+"pure_llm":"""
+You are an assistant answering questions about Scottish geography."""
 }
 
 def get_prompt(mode: str):

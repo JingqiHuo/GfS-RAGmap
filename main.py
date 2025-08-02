@@ -8,7 +8,7 @@ from config.config import *
 def processing(user_input):
     start_idf = time.perf_counter()
     if LLM == 'agent1':
-        test_agent = agent2()
+        test_agent = agent1()
     elif LLM == 'agent2':
         test_agent = agent2()
     task_html= None

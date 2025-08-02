@@ -72,3 +72,19 @@ def processing(user_input):
         print(f"Info integration: {end_integrate-start_integrate:.6f}s")
         print(f"Map making: {end_map-start_map:.6f}s")
     return task_nl,retrieved
+
+def processing_purellm(user_input):
+    start = time.perf_counter()
+
+    # choose agent1 for deepseek/ agent2 for chatgpt
+    if LLM == 'agent1':
+        test_agent = agent2()
+    elif LLM == 'agent2':
+        test_agent = agent2()
+    
+    task_nl = test_agent.agent_nl("pure_llm", user_input)
+    end = time.perf_counter()
+
+    print(f"time: {end-start:.6f}s")
+
+    return task_nl

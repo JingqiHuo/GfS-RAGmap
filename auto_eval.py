@@ -3,21 +3,21 @@ from secrets_retrieval import get_password
 import json
 import random
 import re
+from taskentity_agent import agent1
+from taskentity_agent_gpt import agent2
 import json
-from main_eval import processing
+from main_eval import processing,processing_purellm
 from datasets import Dataset
 from ragas import evaluate
 from ragas.metrics import (
     faithfulness,
     answer_relevancy,
     context_recall,
-    context_precision
+    context_precision,
+    answer_correctness
 )
-from taskentity_agent import agent1
-from taskentity_agent_gpt import agent2
 from config.config import *
 import os
-os.environ["OPENAI_API_KEY"] = OPENAI_PATH
 
 ##############################################################
 #               PART I Data Preparation                      #
@@ -92,7 +92,7 @@ def data_prep():
         json.dump(standarized_data, f, indent = 2)
 
 ##############################################################
-#               PART II Answer Generation (RAG)              #
+#               PART II-i Answer Generation (RAG)            #
 ##############################################################
 def ans_gen(path_to_qaset):
     with open(path_to_qaset,"r") as f:
@@ -108,6 +108,22 @@ def ans_gen(path_to_qaset):
         json.dump(qaset, f, indent=2, ensure_ascii=False)
 
 ##############################################################
+#          PART II-ii Answer Generation (pure LLM)           #
+##############################################################
+def ans_gen_purellm(path_to_qaset):
+    with open(path_to_qaset,"r") as f:
+        qaset = json.load(f)
+
+    for item in qaset:
+        text_ans = processing_purellm(item["query"])
+        print(text_ans)
+        item["predicted_answer"] = text_ans
+        
+    
+    with open("qa_with_pred_purellm.json", "w", encoding="utf-8") as f:
+        json.dump(qaset, f, indent=2, ensure_ascii=False)
+
+##############################################################
 #               PART III Post-integration                    #
 ##############################################################
 def integrate():
@@ -115,7 +131,7 @@ def integrate():
     with open("rageval_qaset.json", "r", encoding="utf-8") as f:
         qaset = json.load(f)
 
-    with open("qa_with_pred.json", "r", encoding="utf-8") as f:
+    with open("qa_with_pred_purellm.json", "r", encoding="utf-8") as f:
         qa_withpred = json.load(f)
 
     # 2. format
@@ -152,7 +168,7 @@ def eval():
     # execute evaluation
     results = evaluate(
         ds,
-        metrics=[faithfulness, answer_relevancy, context_recall, context_precision],
+        metrics=[answer_correctness],
         raise_exceptions=False
     )
     if LLM == 'agent1':
@@ -168,6 +184,6 @@ def eval():
     df.to_csv(name, index=False)
 
 #data_prep()
-#ans_gen("rageval_qaset.json")
-#integrate()
+ans_gen_purellm("rageval_qaset.json")
+integrate()
 eval()
